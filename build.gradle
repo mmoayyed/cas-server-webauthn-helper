@@ -1,0 +1,40 @@
+plugins {
+  id 'java'
+  id 'war'
+  id 'maven-publish'
+  id 'io.freefair.lombok' version '5.2.1'
+}
+
+description = 'WebAuthn Server'
+
+publishing {
+  publications {
+    maven(MavenPublication) {
+      from components.java
+    }
+  }
+}
+
+repositories {
+  mavenCentral()
+  jcenter()
+  maven {
+    url "https://oss.sonatype.org/content/repositories/snapshots"
+    mavenContent { snapshotsOnly() }
+  }
+  maven {
+    mavenContent { releasesOnly() }
+    url "https://build.shibboleth.net/nexus/content/repositories/releases/"
+  }
+}
+
+dependencies {
+  implementation "com.yubico:webauthn-server-attestation:${project.version}"
+  implementation "com.yubico:webauthn-server-core:${project.version}"
+  implementation "com.yubico:yubico-util:${project.version}"
+
+  compileOnly "com.github.ben-manes.caffeine:caffeine:${caffeineVersion}"
+  compileOnly "com.google.guava:guava:${guavaVersion}"
+  compileOnly "org.slf4j:slf4j-api:${slf4jVersion}"
+  implementation "com.upokecenter:cbor:${cborVersion}"
+}
