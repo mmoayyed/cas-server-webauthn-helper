@@ -111,7 +111,7 @@ public class WebAuthnServer {
     private Cache<ByteArray, AssertionRequestWrapper> assertRequestStorage;
     private Cache<ByteArray, RegistrationRequest> registerRequestStorage;
     private RegistrationStorage userStorage;
-    private final SessionManager sessions = new SessionManager();
+    private final SessionManager sessions = new DefaultSessionManager();
 
 
     private TrustResolver trustResolver = new CompositeTrustResolver(Arrays.asList(
