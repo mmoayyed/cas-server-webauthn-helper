@@ -1,8 +1,8 @@
 plugins {
   id 'java'
-  id 'war'
   id 'maven-publish'
   id 'io.freefair.lombok' version '5.2.1'
+  id 'com.jfrog.bintray' version '1.8.5'
 }
 
 description = 'WebAuthn Server'
@@ -11,6 +11,29 @@ publishing {
   publications {
     maven(MavenPublication) {
       from components.java
+      groupId project.group
+      artifactId project.name
+      version project.version
+    }
+  }
+}
+
+bintray {
+  publications = ['maven']
+  user = project.bintrayUser
+  key = project.bintrayApiKey
+  publish = true
+  override = true
+  pkg {
+    repo ='webauthn-cas'
+    userOrg = 'apereocas'
+    name = project.name
+    licenses = ['Apache-2.0']
+    vcsUrl = 'https://github.com/mmoayyed/cas-server-webauthn-helper'
+    version {
+      name = project.version
+      released  = new Date()
+      vcsTag = project.version
     }
   }
 }
