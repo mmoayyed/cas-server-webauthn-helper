@@ -111,7 +111,7 @@ public class WebAuthnServer {
     private Cache<ByteArray, AssertionRequestWrapper> assertRequestStorage;
     private Cache<ByteArray, RegistrationRequest> registerRequestStorage;
     private RegistrationStorage userStorage;
-    private final SessionManager sessions = new DefaultSessionManager();
+    private SessionManager sessions = new DefaultSessionManager();
 
 
     private TrustResolver trustResolver = new CompositeTrustResolver(Arrays.asList(
@@ -157,6 +157,14 @@ public class WebAuthnServer {
          this.rp = rpId;
     }
 
+    public WebAuthnServer(RegistrationStorage userStorage, Cache<ByteArray, RegistrationRequest> registerRequestStorage, Cache<ByteArray, AssertionRequestWrapper> assertRequestStorage, RelyingParty rpId, SessionManager sessionManager) throws CertificateException {
+        this.userStorage = userStorage;
+        this.registerRequestStorage = registerRequestStorage;
+        this.assertRequestStorage = assertRequestStorage;
+        this.rp = rpId;
+        this.sessions = sessionManager;
+    }
+    
     private static ByteArray generateRandom(int length) {
         byte[] bytes = new byte[length];
         random.nextBytes(bytes);
