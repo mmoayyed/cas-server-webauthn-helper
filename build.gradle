@@ -15,6 +15,29 @@ publishing {
       version project.version
     }
   }
+
+  repositories {
+      if (project.hasProperty("publishReleases")) {
+          maven {
+              name "SonatypeReleases"
+              url "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+              mavenContent {
+                  releasesOnly()
+              }
+              credentials(PasswordCredentials)
+          }
+      }
+      if (project.hasProperty("publishSnapshots")) {
+          maven {
+              name "SonatypeSnapshots"
+              url "https://oss.sonatype.org/content/repositories/snapshots/"
+              mavenContent {
+                  snapshotsOnly()
+              }
+              credentials(PasswordCredentials)
+          }
+      }
+  }
 }
 
 repositories {
