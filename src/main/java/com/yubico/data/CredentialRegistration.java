@@ -29,24 +29,26 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.yubico.webauthn.RegisteredCredential;
 import com.yubico.webauthn.attestation.Attestation;
 import com.yubico.webauthn.data.UserIdentity;
-import java.time.Instant;
-import java.util.Optional;
 import lombok.Builder;
 import lombok.Value;
-import lombok.experimental.Wither;
+import lombok.With;
+import java.time.Instant;
+import java.util.Optional;
 
 @Value
 @Builder
-@Wither
+@With
 public class CredentialRegistration {
 
     long signatureCount;
 
     UserIdentity userIdentity;
+
     Optional<String> credentialNickname;
 
     @JsonIgnore
     Instant registrationTime;
+
     RegisteredCredential credential;
 
     Optional<Attestation> attestationMetadata;
