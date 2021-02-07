@@ -1,19 +1,74 @@
 plugins {
   id 'java'
   id 'maven-publish'
+  id 'signing'
   id 'io.freefair.lombok' version '5.3.0'
 }
 
 description = 'Apereo CAS WebAuthn Server Helper'
 
+task sourcesJar(type: Jar, dependsOn: classes) {
+    archiveClassifier = "sources"
+    from sourceSets.main.allSource
+}
+
+task resourcesJar(type: Jar) {
+    classifier "resources"
+    from project.file("src/main/resources")
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    archiveClassifier = "javadoc"
+    from javadoc.destinationDir
+}
+
+artifacts {
+  archives sourcesJar
+  archives javadocJar
+  archives resourcesJar
+}
+
 publishing {
   publications {
     maven(MavenPublication) {
       from components.java
+      artifact tasks['sourcesJar']
+      artifact tasks['javadocJar']
+      artifact tasks['resourcesJar']
+
       groupId project.group
       artifactId project.name
       version project.version
+
+       pom {
+          name = project.name
+          description = project.description
+          url = 'https://github.com/apereo/cas'
+          licenses {
+              license {
+                  name = 'The Apache License, Version 2.0'
+                  url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+              }
+          }
+          developers {
+              developer {
+                  id = 'mmoayyed'
+                  name = 'Misagh Moayyed'
+                  email = 'mm1844@gmail.com'
+              }
+          }
+          scm {
+              connection = 'scm:git@github.com:mmoayyed/cas-server-webauthn-helper.git'
+              developerConnection = 'scm:git@github.com:mmoayyed/cas-server-webauthn-helper.git'
+              url = 'https://github.com/mmoayyed/cas-server-webauthn-helper'
+          }
+      }
+
     }
+  }
+
+  signing {
+      sign publishing.publications
   }
 
   repositories {
