@@ -53,9 +53,9 @@ repositories {
 }
 
 dependencies {
-  implementation "com.yubico:webauthn-server-attestation:${project.version}"
-  implementation "com.yubico:webauthn-server-core:${project.version}"
-  implementation "com.yubico:yubico-util:${project.version}"
+  implementation "com.yubico:webauthn-server-attestation:${project.yubikeyWebAuthnVersion}"
+  implementation "com.yubico:webauthn-server-core:${project.yubikeyWebAuthnVersion}"
+  implementation "com.yubico:yubico-util:${project.yubikeyWebAuthnVersion}"
 
   compileOnly "com.github.ben-manes.caffeine:caffeine:${caffeineVersion}"
   compileOnly "com.google.guava:guava:${guavaVersion}"
