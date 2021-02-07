@@ -19,7 +19,7 @@ publishing {
   repositories {
       if (project.hasProperty("publishReleases")) {
           maven {
-              name "SonatypeReleases"
+              name "Sonatype"
               url "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
               mavenContent {
                   releasesOnly()
@@ -29,7 +29,7 @@ publishing {
       }
       if (project.hasProperty("publishSnapshots")) {
           maven {
-              name "SonatypeSnapshots"
+              name "Sonatype"
               url "https://oss.sonatype.org/content/repositories/snapshots/"
               mavenContent {
                   snapshotsOnly()

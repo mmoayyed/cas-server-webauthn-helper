@@ -5,11 +5,11 @@
 To release:
 
 ```bash
-./gradlew build publish -PpublishReleases=true -PSonatypeReleasesUsername=secret-user -PSonatypeReleasesPassword=secret-password
+./gradlew build publish -PpublishReleases=true -PSonatypeUsername=secret-user -PSonatypePassword=secret-password
 ```
 
 To publish snapshots:
 
 ```bash
-./gradlew build publish -PpublishSnapshots=true -PSonatypeSnapshotsUsername=secret-user -PSonatypeSnapshotsPassword=secret-password
+./gradlew build publish -PpublishSnapshots=true -PSonatypeUsername=secret-user -PSonatypePassword=secret-password
 ```
