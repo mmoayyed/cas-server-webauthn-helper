@@ -46,17 +46,11 @@ public class CredentialRegistration {
 
     Optional<String> credentialNickname;
 
-    @JsonIgnore
     Instant registrationTime;
 
     RegisteredCredential credential;
 
     Optional<Attestation> attestationMetadata;
-
-    @JsonProperty("registrationTime")
-    public String getRegistrationTimestamp() {
-        return registrationTime.toString();
-    }
 
     public String getUsername() {
         return userIdentity.getName();
