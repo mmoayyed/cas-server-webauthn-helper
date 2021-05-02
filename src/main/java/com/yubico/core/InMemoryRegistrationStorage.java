@@ -41,6 +41,8 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,19 +50,18 @@ import org.slf4j.LoggerFactory;
 @Slf4j
 public class InMemoryRegistrationStorage implements RegistrationStorage, CredentialRepository {
 
+    @Getter
     private final Cache<String, Set<CredentialRegistration>> storage = CacheBuilder.newBuilder()
         .maximumSize(1000)
         .expireAfterAccess(1, TimeUnit.DAYS)
         .build();
-
-    private Logger logger = LoggerFactory.getLogger(InMemoryRegistrationStorage.class);
 
     @Override
     public boolean addRegistrationByUsername(String username, CredentialRegistration reg) {
         try {
             return storage.get(username, HashSet::new).add(reg);
         } catch (ExecutionException e) {
-            logger.error("Failed to add registration", e);
+            log.error("Failed to add registration", e);
             throw new RuntimeException(e);
         }
     }
@@ -79,7 +80,7 @@ public class InMemoryRegistrationStorage implements RegistrationStorage, Credent
         try {
             return storage.get(username, HashSet::new);
         } catch (ExecutionException e) {
-            logger.error("Registration lookup failed", e);
+            log.error("Registration lookup failed", e);
             throw new RuntimeException(e);
         }
     }
@@ -110,13 +111,13 @@ public class InMemoryRegistrationStorage implements RegistrationStorage, Credent
 
     @Override
     public void updateSignatureCount(AssertionResult result) {
-        CredentialRegistration registration = getRegistrationByUsernameAndCredentialId(result.getUsername(), result.getCredentialId())
+        var registration = getRegistrationByUsernameAndCredentialId(result.getUsername(), result.getCredentialId())
             .orElseThrow(() -> new NoSuchElementException(String.format(
                 "Credential \"%s\" is not registered to user \"%s\"",
                 result.getCredentialId(), result.getUsername()
             )));
 
-        Set<CredentialRegistration> regs = storage.getIfPresent(result.getUsername());
+        var regs = storage.getIfPresent(result.getUsername());
         regs.remove(registration);
         regs.add(registration.withSignatureCount(result.getSignatureCount()));
     }
@@ -128,7 +129,7 @@ public class InMemoryRegistrationStorage implements RegistrationStorage, Credent
                 .filter(credReg -> id.equals(credReg.getCredential().getCredentialId()))
                 .findFirst();
         } catch (ExecutionException e) {
-            logger.error("Registration lookup failed", e);
+            log.error("Registration lookup failed", e);
             throw new RuntimeException(e);
         }
     }
@@ -138,7 +139,7 @@ public class InMemoryRegistrationStorage implements RegistrationStorage, Credent
         try {
             return storage.get(username, HashSet::new).remove(credentialRegistration);
         } catch (ExecutionException e) {
-            logger.error("Failed to remove registration", e);
+            log.error("Failed to remove registration", e);
             throw new RuntimeException(e);
         }
     }
@@ -151,12 +152,12 @@ public class InMemoryRegistrationStorage implements RegistrationStorage, Credent
 
     @Override
     public Optional<RegisteredCredential> lookup(ByteArray credentialId, ByteArray userHandle) {
-        Optional<CredentialRegistration> registrationMaybe = storage.asMap().values().stream()
+        var registrationMaybe = storage.asMap().values().stream()
             .flatMap(Collection::stream)
             .filter(credReg -> credentialId.equals(credReg.getCredential().getCredentialId()))
             .findAny();
 
-        logger.debug("lookup credential ID: {}, user handle: {}; result: {}", credentialId, userHandle, registrationMaybe);
+        log.debug("lookup credential ID: {}, user handle: {}; result: {}", credentialId, userHandle, registrationMaybe);
         return registrationMaybe.flatMap(registration ->
             Optional.of(
                 RegisteredCredential.builder()
@@ -170,7 +171,7 @@ public class InMemoryRegistrationStorage implements RegistrationStorage, Credent
     }
 
     @Override
-    public Set<RegisteredCredential> lookupAll(ByteArray credentialId) {
+    public Set<RegisteredCredential> lookupAll(final ByteArray credentialId) {
         return CollectionUtil.immutableSet(
             storage.asMap().values().stream()
                 .flatMap(Collection::stream)
