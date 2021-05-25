@@ -25,14 +25,15 @@
 package com.yubico.webauthn;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.yubico.data.RegistrationRequest;
+import com.yubico.data.U2fRegistrationResponse;
 import com.yubico.internal.util.CertificateParser;
 import com.yubico.internal.util.ExceptionUtil;
 import com.yubico.internal.util.JacksonCodecs;
 import com.yubico.webauthn.data.ByteArray;
 import com.yubico.webauthn.data.exception.Base64UrlException;
 import com.yubico.webauthn.extension.appid.AppId;
-import com.yubico.data.RegistrationRequest;
-import com.yubico.data.U2fRegistrationResponse;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -41,21 +42,31 @@ import java.security.cert.X509Certificate;
 
 public class U2fVerifier {
 
-    public static boolean verify(AppId appId,  RegistrationRequest request, U2fRegistrationResponse response) throws CertificateException, IOException, Base64UrlException {
-        final ByteArray appIdHash = Crypto.hash(appId.getId());
-        final ByteArray clientDataHash = Crypto.hash(response.getCredential().getU2fResponse().getClientDataJSON());
+    public static boolean verify(
+        AppId appId, RegistrationRequest request, U2fRegistrationResponse response)
+        throws CertificateException, IOException, Base64UrlException {
+        final ByteArray appIdHash = Crypto.sha256(appId.getId());
+        final ByteArray clientDataHash =
+            Crypto.sha256(response.getCredential().getU2fResponse().getClientDataJSON());
 
-        final JsonNode clientData = JacksonCodecs.json().readTree(response.getCredential().getU2fResponse().getClientDataJSON().getBytes());
+        final JsonNode clientData =
+            JacksonCodecs.json()
+                .readTree(response.getCredential().getU2fResponse().getClientDataJSON().getBytes());
         final String challengeBase64 = clientData.get("challenge").textValue();
 
         ExceptionUtil.assure(
-            request.getPublicKeyCredentialCreationOptions().getChallenge().equals(ByteArray.fromBase64Url(challengeBase64)),
-            "Wrong challenge."
-        );
+            request
+                .getPublicKeyCredentialCreationOptions()
+                .getChallenge()
+                .equals(ByteArray.fromBase64Url(challengeBase64)),
+            "Wrong challenge.");
 
-        InputStream attestationCertAndSignatureStream = new ByteArrayInputStream(response.getCredential().getU2fResponse().getAttestationCertAndSignature().getBytes());
+        InputStream attestationCertAndSignatureStream =
+            new ByteArrayInputStream(
+                response.getCredential().getU2fResponse().getAttestationCertAndSignature().getBytes());
 
-        final X509Certificate attestationCert = CertificateParser.parseDer(attestationCertAndSignatureStream);
+        final X509Certificate attestationCert =
+            CertificateParser.parseDer(attestationCertAndSignatureStream);
 
         byte[] signatureBytes = new byte[attestationCertAndSignatureStream.available()];
         attestationCertAndSignatureStream.read(signatureBytes);
@@ -65,11 +76,8 @@ public class U2fVerifier {
             response.getCredential().getU2fResponse().getPublicKey(),
             response.getCredential().getU2fResponse().getKeyHandle(),
             attestationCert,
-            signature
-        ).verifySignature(
-            appIdHash,
-            clientDataHash
-        );
+            signature)
+            .verifySignature(appIdHash, clientDataHash);
     }
 
 }

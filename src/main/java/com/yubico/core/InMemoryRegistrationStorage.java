@@ -35,7 +35,9 @@ import com.yubico.webauthn.data.PublicKeyCredentialDescriptor;
 import com.yubico.data.CredentialRegistration;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -52,14 +54,14 @@ public class InMemoryRegistrationStorage implements RegistrationStorage, Credent
 
     @Getter
     private final Cache<String, Set<CredentialRegistration>> storage = CacheBuilder.newBuilder()
-        .maximumSize(1000)
+        .maximumSize(5000)
         .expireAfterAccess(1, TimeUnit.DAYS)
         .build();
 
     @Override
     public boolean addRegistrationByUsername(String username, CredentialRegistration reg) {
         try {
-            return storage.get(username, HashSet::new).add(reg);
+            return storage.get(username.toLowerCase(), HashSet::new).add(reg);
         } catch (ExecutionException e) {
             log.error("Failed to add registration", e);
             throw new RuntimeException(e);
@@ -68,7 +70,7 @@ public class InMemoryRegistrationStorage implements RegistrationStorage, Credent
 
     @Override
     public Set<PublicKeyCredentialDescriptor> getCredentialIdsForUsername(String username) {
-        return getRegistrationsByUsername(username).stream()
+        return getRegistrationsByUsername(username.toLowerCase()).stream()
             .map(registration -> PublicKeyCredentialDescriptor.builder()
                 .id(registration.getCredential().getCredentialId())
                 .build())
@@ -78,7 +80,7 @@ public class InMemoryRegistrationStorage implements RegistrationStorage, Credent
     @Override
     public Collection<CredentialRegistration> getRegistrationsByUsername(String username) {
         try {
-            return storage.get(username, HashSet::new);
+            return storage.get(username.toLowerCase(), HashSet::new);
         } catch (ExecutionException e) {
             log.error("Registration lookup failed", e);
             throw new RuntimeException(e);
@@ -104,28 +106,28 @@ public class InMemoryRegistrationStorage implements RegistrationStorage, Credent
 
     @Override
     public Optional<ByteArray> getUserHandleForUsername(String username) {
-        return getRegistrationsByUsername(username).stream()
+        return getRegistrationsByUsername(username.toLowerCase()).stream()
             .findAny()
             .map(reg -> reg.getUserIdentity().getId());
     }
 
     @Override
     public void updateSignatureCount(AssertionResult result) {
-        var registration = getRegistrationByUsernameAndCredentialId(result.getUsername(), result.getCredentialId())
+        var registration = getRegistrationByUsernameAndCredentialId(result.getUsername().toLowerCase(Locale.ROOT), result.getCredentialId())
             .orElseThrow(() -> new NoSuchElementException(String.format(
                 "Credential \"%s\" is not registered to user \"%s\"",
                 result.getCredentialId(), result.getUsername()
             )));
 
-        var regs = storage.getIfPresent(result.getUsername());
-        regs.remove(registration);
+        var regs = storage.getIfPresent(result.getUsername().toLowerCase());
+        Objects.requireNonNull(regs).remove(registration);
         regs.add(registration.withSignatureCount(result.getSignatureCount()));
     }
 
     @Override
     public Optional<CredentialRegistration> getRegistrationByUsernameAndCredentialId(String username, ByteArray id) {
         try {
-            return storage.get(username, HashSet::new).stream()
+            return storage.get(username.toLowerCase(), HashSet::new).stream()
                 .filter(credReg -> id.equals(credReg.getCredential().getCredentialId()))
                 .findFirst();
         } catch (ExecutionException e) {
@@ -137,7 +139,7 @@ public class InMemoryRegistrationStorage implements RegistrationStorage, Credent
     @Override
     public boolean removeRegistrationByUsername(String username, CredentialRegistration credentialRegistration) {
         try {
-            return storage.get(username, HashSet::new).remove(credentialRegistration);
+            return storage.get(username.toLowerCase(), HashSet::new).remove(credentialRegistration);
         } catch (ExecutionException e) {
             log.error("Failed to remove registration", e);
             throw new RuntimeException(e);
@@ -146,7 +148,7 @@ public class InMemoryRegistrationStorage implements RegistrationStorage, Credent
 
     @Override
     public boolean removeAllRegistrations(String username) {
-        storage.invalidate(username);
+        storage.invalidate(username.toLowerCase());
         return true;
     }
 
